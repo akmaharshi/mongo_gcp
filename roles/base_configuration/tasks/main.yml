@@ -1,0 +1,8 @@
+---
+- include: filesystem.yml
+- include: urandom.yml
+- include: kernel.yml
+- include: systemd.yml
+- include: timezone.yml
+- include: sysctl.yml
+- include: security.yml

@@ -1,0 +1,55 @@
+- name: Compute Engine Instance Examples
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - gce_vars/auth
+    - gce_vars/machines
+    - gce_vars/zone
+
+  tasks:
+    - name: create multiple instances
+      # Basic provisioning example.  Create multiple Debian 8 instances in the
+      # us-central1-a Zone of n1-standard-1 machine type.
+      gce:
+        instance_names: "{{ redis_machines }}"
+        zone: us-central1-a
+        machine_type: n1-standard-1
+        image: "{{ image }}"
+        state: present
+        service_account_email: "{{ service_mail }}"
+        credentials_file: "{{ gcp_cred_file }}"
+        project_id: "{{ gcp_project }}"
+        metadata : '{ "startup-script" : "yum update" }'
+        service_account_permissions:
+          - https://www.googleapis.com/auth/ndev.clouddns.readwrite
+          - https://www.googleapis.com/auth/compute
+          - https://www.googleapis.com/auth/devstorage.read_only
+          - https://www.googleapis.com/auth/logging.write
+          - https://www.googleapis.com/auth/monitoring
+          - https://www.googleapis.com/auth/servicecontrol
+          - https://www.googleapis.com/auth/service.management.readonly
+          - https://www.googleapis.com/auth/trace.append
+      register: gce
+
+    - name: Save host data
+      add_host:
+        hostname: "{{ item.public_ip }}"
+        groupname: gce_instances_ips
+      with_items: "{{ gce.instance_data }}"
+
+    - name: Wait for SSH for instances
+      wait_for:
+        delay: 1
+        host: "{{ item.public_ip }}"
+        port: 22
+        state: started
+        timeout: 30
+      with_items: "{{ gce.instance_data }}"
+
+- name: Configure Hosts
+  hosts: gce_instances_ips
+  become: yes
+  become_method: sudo
+  roles:
+    - base_configuration
+    - redis

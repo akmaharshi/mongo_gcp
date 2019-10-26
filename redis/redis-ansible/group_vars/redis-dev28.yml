@@ -1,0 +1,15 @@
+---
+slave_output_buffer_limit: 1024m
+maxmemory: 0
+maxmemory_policy: volatile-lru
+appendonly: 'yes'
+auto_aof_rewrite_percentage: 100
+auto_aof_rewrite_min_size: 64mb
+service_name_list:
+    - redis-mulcher
+    - redis-valut-0
+    - redis-vault-1
+service_port_list:
+    - 6608
+    - 6609
+    - 6610

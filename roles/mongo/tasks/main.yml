@@ -1,0 +1,73 @@
+---
+- name: create mongo group
+  group: 
+    name: mongodba 
+    state: present 
+    system: yes
+
+- name: create mongo user
+  user: 
+    name: mongo 
+    group: mongodba
+    createhome: yes 
+    home: /mongo/data 
+    shell: /bin/false 
+    system: yes 
+    state: present
+
+- name: make sure that /mongo/data exists
+  file: 
+    path: /mongo/data
+    state: directory
+    mode: 0755
+    group: mongodba
+    owner: mongo
+    
+- name: install xfsprogs
+  yum: 
+    pkg: xfsprogs
+    state: latest
+
+- name: Create mongo filesystem
+  filesystem:
+    fstype: xfs
+    dev: /dev/sdb
+
+- name: Mount mongo filesystem
+  mount:
+    path: /mnt/sdb
+    src: /mongo
+    fstype: xfs
+    opts: discard,defaults,nofail
+    state: present
+
+- name: download and unarchive mongo
+  unarchive:
+    src: https://mongodbstageprod.s3.amazonaws.com/mongodb-linux-x86_64-rhel70-4.2.1.tgz
+    dest: /mongo
+    remote_src: yes
+    
+- name: make sure that /mongo/mongodb-linux-x86_64-rhel70-4.2.1 with right permissions
+  file: 
+    path: /mongo/mongodb-linux-x86_64-rhel70-4.2.1
+    state: directory
+    mode: 0755
+    recurse: yes
+    group: mongodba
+    owner: mongo
+    
+- name: make sure that /mongo/logs exists
+  file: 
+    path: /mongo/logs
+    state: directory
+    mode: 0755
+    group: mongodba
+    owner: mongo
+
+- name: make sure that /mongo/audit exists
+  file: 
+    path: /mongo/audit
+    state: directory
+    mode: 0755
+    group: mongodba
+    owner: mongo

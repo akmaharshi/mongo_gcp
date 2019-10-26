@@ -1,0 +1,7 @@
+Welcome to prod055!
+
+Size: r3.2xlarge        CPU: Xeon E5-2670 v2 @ 2.50GHz   Distro: CentOS Linux release 7.7.1908 (Core)
+Zone: us-east-1c        RAM: 59.84 GB                    Kernel: 3.10.0-1062.1.1.el7.x86_64
+
+Realm: stage
+Services: Redis Radar Results (Shard 1)
