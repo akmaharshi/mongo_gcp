@@ -1,0 +1,49 @@
+pipeline {
+
+    agent any
+
+    parameters { 
+        string(name: 'AWS_BUCKET', description: 'enter aws s3 bucket name')
+        choice(name: 'GCP_PROJECT_ID', choices: ['runscope-228819', 'esd-runscope-prd'], description: 'Pick something')
+    }
+
+    stages {
+
+    	stage('Get GCP Bucket List') {
+	       steps {
+        	   sh '''
+                    for i in runscope-228819 esd-runscope-prd
+                    do
+                        echo "creating $i"
+                        gsutil ls -p "$i" gs:// | awk -F'/' '{print $3}' >> gcp_bucket_list
+                    done
+                '''
+            }
+    	}
+        stage('Get GCP Bucket List') {
+            steps {
+                sh "awk 'NR==FNR{a[$0];next}!($0 in a)' gcp_bucket_list dev_aws_bucket_list  > dev_bucket_list"
+            }
+        }
+        stage('Create bucket in GCS in DEV') {
+            steps {
+                sh '''
+                    echo "create bucket $AWS_BUCKET in $GCP_PROJECT_ID"
+                    if [ "$GCP_PROJECT_ID" == "runscope-228819" ]; then
+                        gsutil mb -p runscope-228819 -c Standard -l us-east4 -b on gs://"$AWS_BUCKET"
+                    else
+                        gsutil mb -p esd-runscope-prd -c Standard -l us-east4 -b on gs://"$AWS_BUCKET"
+                    fi
+                '''
+            }
+        }
+        stage('Copy file from S3 to GCS') {
+            steps {
+                sh '''
+                    echo "copying contents to $AWS_BUCKET"
+                    gsutil -m cp -R s3://"$AWS_BUCKET" gs://"$AWS_BUCKET"
+                '''
+            }
+        }
+    }
+}
